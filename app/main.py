@@ -29,13 +29,13 @@ def challenge(challenge: ChallengeModel):
 
 
 @app.post("/slash")
-def slash(channel_name: str = Form(...), user_name: str = Form(...), command: str = Form(...), text: str = Form(...), response_url: str = Form(...)):
+def slash(channel_name: str = Form(...), user_name: str = Form(...), command: str = Form(...), text: str = Form(...), response_url: str = Form(...), background_tasks: BackgroundTasks = BackgroundTasks()):
     words = text.split()
     operation = words[0] if words else None
     message = ' '.join(words[1:]) if len(words) > 1 else ''
 
     if operation == 'ingest':
-        BackgroundTasks.add_task(ingest, response_url, message)
+        background_tasks.add_task(ingest, response_url, message)
         return {"response_type": "in_channel", 'text': 'Processing...'}
     elif operation == 'question':
         url = os.environ["RESTAI_URL"] + '/projects/' + \
