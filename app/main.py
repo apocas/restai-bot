@@ -15,11 +15,23 @@ app = FastAPI()
 
 
 def ingest(response_url: str, message: str):
+    print("Ingesting... " + message)
     url = os.environ["RESTAI_URL"] + '/projects/' + os.environ["RESTAI_PROJECT"] + '/ingest/url'
     data = {"url": message}
     response = requests.post(url, json=data)
-
-    data = {"response_type": "in_channel", 'text': response.json()}
+    responsej = response.json()
+    data = {
+        "response_type": "in_channel",
+        "blocks": [
+            {
+                'type': 'section',
+                'text': {
+                    "type": "mrkdwn",
+                    'text': "Ingested " + responsej.get("documents", 0) + " documents and " + responsej.get("texts", 0) + " texts from " + responsej.get("url", "")
+                }
+            }
+        ]
+    };
     requests.post(response_url, json=data)
 
 
@@ -42,7 +54,7 @@ def slash(channel_name: str = Form(...), user_name: str = Form(...), command: st
             os.environ["RESTAI_PROJECT"] + '/question'
         data = {"question": message}
         response = requests.post(url, json=data)
-        answer = response.json().get('answer', '')
+        answer = response.json().get('answer', 'Error...')
         return {"response_type": "in_channel", 'text': answer}
     elif operation == 'chat':
         pass
