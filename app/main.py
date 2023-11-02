@@ -16,7 +16,8 @@ app = FastAPI()
 
 def ingest(response_url: str, message: str):
     print("Ingesting... " + message)
-    url = os.environ["RESTAI_URL"] + '/projects/' + os.environ["RESTAI_PROJECT"] + '/ingest/url'
+    url = os.environ["RESTAI_URL"] + '/projects/' + \
+        os.environ["RESTAI_PROJECT"] + '/ingest/url'
     data = {"url": message}
     response = requests.post(url, json=data)
     responsej = response.json()
@@ -31,7 +32,29 @@ def ingest(response_url: str, message: str):
                 }
             }
         ]
-    };
+    }
+    requests.post(response_url, json=data)
+
+
+def question(response_url: str, message: str):
+    url = os.environ["RESTAI_URL"] + '/projects/' + \
+        os.environ["RESTAI_PROJECT"] + '/question'
+    data = {"question": message}
+    response = requests.post(url, json=data)
+    answer = response.json().get('answer', 'Error...')
+
+    data = {
+        "response_type": "in_channel",
+        "blocks": [
+            {
+                'type': 'section',
+                'text': {
+                    "type": "mrkdwn",
+                    'text': answer
+                }
+            }
+        ]
+    }
     requests.post(response_url, json=data)
 
 
@@ -48,14 +71,10 @@ def slash(channel_name: str = Form(...), user_name: str = Form(...), command: st
 
     if operation == 'ingest':
         background_tasks.add_task(ingest, response_url, message)
-        return {"response_type": "in_channel", 'text': 'Processing...'}
+        return {"response_type": "in_channel", 'text': 'Ingesting...'}
     elif operation == 'question':
-        url = os.environ["RESTAI_URL"] + '/projects/' + \
-            os.environ["RESTAI_PROJECT"] + '/question'
-        data = {"question": message}
-        response = requests.post(url, json=data)
-        answer = response.json().get('answer', 'Error...')
-        return {"response_type": "in_channel", 'text': answer}
+        background_tasks.add_task(question, response_url, message)
+        return {"response_type": "in_channel", 'text': 'Processing...'}
     elif operation == 'chat':
         pass
     else:
