@@ -27,7 +27,7 @@ def ingest(response_url: str, message: str):
                 'type': 'section',
                 'text': {
                     "type": "mrkdwn",
-                    'text': "Ingested " + responsej.get("documents", "0") + " documents and " + responsej.get("texts", "0") + " texts from " + responsej.get("url", "")
+                    'text': "Ingested " + str(responsej.get("documents", 0)) + " documents and " + str(responsej.get("texts", 0)) + " texts from " + responsej.get("url", "")
                 }
             }
         ]
